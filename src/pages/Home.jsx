@@ -1,62 +1,63 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import useGlobalReducer from "../hooks/useGlobalReducer.jsx"; 
+import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import { ContactCard } from "../components/ContactCard.jsx";
+import { Modal } from "../components/Modal.jsx";
 
 export const Home = () => {
     const { store, dispatch } = useGlobalReducer();
     const myUser = "Carlos";
 
-    // 1. Cargar contactos
+    const [showModal, setShowModal] = useState(false);
+    const [idToDelete, setIdToDelete] = useState(null);
+
     const loadContacts = async () => {
         try {
             const response = await fetch(`https://playground.4geeks.com/contact/agendas/${myUser}/contacts`);
-            
+
             if (response.status === 404) {
-                console.log("No existe la agenda, creando una nueva...");
                 await createAgenda();
                 return;
             }
 
             const data = await response.json();
             dispatch({ type: "load_contacts", payload: data.contacts });
-
         } catch (error) {
-            console.error("Error cargando contactos:", error);
+            console.error(error);
         }
     };
 
-    // 2. Crear agenda si hace falta
     const createAgenda = async () => {
         try {
             const response = await fetch(`https://playground.4geeks.com/contact/agendas/${myUser}`, {
                 method: "POST"
             });
             if (response.ok) {
-                console.log("Agenda creada!");
                 loadContacts();
             }
         } catch (error) {
-            console.error("Error creando agenda:", error);
+            console.error(error);
         }
     };
 
-    // 3. Borrar contacto
-    const handleDelete = async (id) => {
-        const confirmDelete = window.confirm("¿Seguro que quieres borrarlo?");
-        if (!confirmDelete) return;
+    const openDeleteModal = (id) => {
+        setIdToDelete(id);
+        setShowModal(true);
+    };
 
+    const confirmDelete = async () => {
         try {
-            const response = await fetch(`https://playground.4geeks.com/contact/agendas/${myUser}/contacts/${id}`, {
+            const response = await fetch(`https://playground.4geeks.com/contact/agendas/${myUser}/contacts/${idToDelete}`, {
                 method: "DELETE"
             });
-            
+
             if (response.ok) {
-                console.log("Borrado con éxito");
-                loadContacts(); // Recargamos la lista
+                loadContacts();
+                setShowModal(false);
+                setIdToDelete(null);
             }
         } catch (error) {
-            console.error("Error borrando:", error);
+            console.error(error);
         }
     };
 
@@ -68,7 +69,7 @@ export const Home = () => {
         <div className="container mt-5">
             <div className="row justify-content-center">
                 <div className="col-12 col-md-10">
-                    
+
                     <div className="d-flex justify-content-end mb-3">
                         <Link to="/new-contact">
                             <button className="btn btn-success">Add new contact</button>
@@ -78,22 +79,28 @@ export const Home = () => {
                     <div className="d-flex flex-column gap-3">
                         {store.contacts && store.contacts.length > 0 ? (
                             store.contacts.map((contact) => (
-                                <ContactCard 
-                                    key={contact.id} 
-                                    contact={contact} 
-                                    onDelete={handleDelete} 
+                                <ContactCard
+                                    key={contact.id}
+                                    contact={contact}
+                                    onDelete={openDeleteModal}
                                 />
                             ))
                         ) : (
-                            <div className="text-center p-5 bg-light border rounded">
+                            <div className="text-center p-5 bg-light rounded border">
                                 <h3>📇</h3>
-                                <p>No hay contactos. ¡Agrega uno!</p>
+                                <p>No Contacts. ¡Add New!</p>
                             </div>
                         )}
                     </div>
 
                 </div>
             </div>
+
+            <Modal
+                show={showModal}
+                onClose={() => setShowModal(false)}
+                onConfirm={confirmDelete}
+            />
         </div>
     );
 };

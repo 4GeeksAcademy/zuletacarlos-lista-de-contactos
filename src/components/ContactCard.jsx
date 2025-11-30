@@ -24,12 +24,10 @@ export const ContactCard = ({ contact, onDelete }) => {
                 </div>
 
                 <div className="col-md-2 d-flex flex-column justify-content-center align-items-center gap-3 py-3 border-start">
-                    { }
-                    <button className="btn btn-outline-dark border-0" onClick={() => alert("Editar todavía no está listo")}>
+                    <Link to={`/edit/${contact.id}`} className="btn btn-outline-dark border-0">
                         <i className="fas fa-pencil-alt"></i>
-                    </button>
+                    </Link>
 
-                    { }
                     <button className="btn btn-outline-danger border-0" onClick={() => onDelete(contact.id)}>
                         <i className="fas fa-trash-alt"></i>
                     </button>
